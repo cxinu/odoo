@@ -1,10 +1,10 @@
 from fastapi import FastAPI
-# from app.api import api_router
+from app.db import test_connection
 
 app = FastAPI()
 
-# app.include_router(api_router)
+test_connection()
 
 @app.get("/")
-def root():
-    return {"message": "StackIt backend is running 🚀"}
+def read_root():
+    return {"message": "Hello, StackIt!"}
