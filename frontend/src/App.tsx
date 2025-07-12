@@ -1,46 +1,46 @@
-import { Routes, Route } from "react-router-dom"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { AuthProvider } from "@/providers/auth-provider"
-import { NotificationProvider } from "@/providers/notification-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { Header } from "@/components/layout/header"
-import { HomePage } from "@/pages/home"
-import { AskQuestionPage } from "@/pages/ask-question"
-import { QuestionDetailPage } from "@/pages/question-detail"
-import { ProfilePage } from "@/pages/profile"
-import { AdminPage } from "@/pages/admin"
+"use client"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { Toaster } from "react-hot-toast"
+import Navbar from "./components/Navbar"
+import HomePage from "./pages/HomePage"
+import QuestionPage from "./pages/QuestionPage"
+import AskQuestionPage from "./pages/AskQuestionPage"
+import LoginPage from "./pages/LoginPage"
+import RegisterPage from "./pages/RegisterPage"
+import { AuthProvider, useAuth } from "./contexts/AuthContext"
+import { DataProvider } from "./contexts/DataContext"
+import "./App.css"
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      refetchOnWindowFocus: false,
-    },
-  },
-})
+function AppContent() {
+    const { user } = useAuth()
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <main className="container mx-auto px-4 py-8">
+                <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/question/:id" element={<QuestionPage />} />
+                    <Route path="/ask" element={user ? <AskQuestionPage /> : <Navigate to="/login" />} />
+                    <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/" />} />
+                    <Route path="/register" element={!user ? <RegisterPage /> : <Navigate to="/" />} />
+                </Routes>
+            </main>
+            <Toaster position="top-right" />
+        </div>
+    )
+}
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <NotificationProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <main>
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/ask" element={<AskQuestionPage />} />
-                <Route path="/questions/:id" element={<QuestionDetailPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/admin" element={<AdminPage />} />
-              </Routes>
-            </main>
-            <Toaster />
-          </div>
-        </NotificationProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  )
+    return (
+        <Router>
+            <AuthProvider>
+                <DataProvider>
+                    <AppContent />
+                </DataProvider>
+            </AuthProvider>
+        </Router>
+    )
 }
 
 export default App
