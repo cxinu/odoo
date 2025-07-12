@@ -14,6 +14,8 @@ export interface Question {
     votes: number
     answers: Answer[]
     acceptedAnswerId?: string
+    upvotedBy: string[]
+    downvotedBy: string[]
 }
 
 export interface Answer {
@@ -39,9 +41,9 @@ export interface Notification {
 interface DataContextType {
     questions: Question[]
     notifications: Notification[]
-    addQuestion: (question: Omit<Question, "id" | "createdAt" | "votes" | "answers">) => void
+    addQuestion: (question: Omit<Question, "id" | "createdAt" | "votes" | "answers" | "upvotedBy" | "downvotedBy">) => void
     addAnswer: (answer: Omit<Answer, "id" | "createdAt" | "votes">) => void
-    voteQuestion: (questionId: string, vote: 1 | -1) => void
+    voteQuestion: (questionId: string, vote: 1 | -1, userId: string) => void
     voteAnswer: (answerId: string, vote: 1 | -1) => void
     acceptAnswer: (questionId: string, answerId: string) => void
     markNotificationRead: (notificationId: string) => void
@@ -50,7 +52,6 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
 
-// Mock initial data
 const initialQuestions: Question[] = [
     {
         id: "1",
@@ -62,6 +63,8 @@ const initialQuestions: Question[] = [
         authorName: "John Doe",
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         votes: 5,
+        upvotedBy: [],
+        downvotedBy: [],
         answers: [
             {
                 id: "ans1",
@@ -85,6 +88,8 @@ const initialQuestions: Question[] = [
         authorName: "Bob Wilson",
         createdAt: new Date(Date.now() - 172800000).toISOString(),
         votes: 8,
+        upvotedBy: [],
+        downvotedBy: [],
         answers: [],
     },
 ]
@@ -119,13 +124,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem("stackit_notifications", JSON.stringify(newNotifications))
     }
 
-    const addQuestion = (questionData: Omit<Question, "id" | "createdAt" | "votes" | "answers">) => {
+    const addQuestion = (questionData: Omit<Question, "id" | "createdAt" | "votes" | "answers" | "upvotedBy" | "downvotedBy">) => {
         const newQuestion: Question = {
             ...questionData,
             id: Date.now().toString(),
             createdAt: new Date().toISOString(),
             votes: 0,
             answers: [],
+            upvotedBy: [],
+            downvotedBy: [],
         }
 
         const newQuestions = [newQuestion, ...questions]
@@ -167,10 +174,49 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         saveQuestions(newQuestions)
     }
 
-    const voteQuestion = (questionId: string, vote: 1 | -1) => {
-        const newQuestions = questions.map((q) => (q.id === questionId ? { ...q, votes: q.votes + vote } : q))
-        saveQuestions(newQuestions)
-    }
+const voteQuestion = (questionId: string, vote: 1 | -1, userId: string) => {
+    const newQuestions = questions.map((q) => {
+        if (q.id === questionId) {
+            // Initialize arrays if they don't exist
+            const upvotedBy = q.upvotedBy || []
+            const downvotedBy = q.downvotedBy || []
+
+            const hasUpvoted = upvotedBy.includes(userId)
+            const hasDownvoted = downvotedBy.includes(userId)
+
+            // If clicking the same vote button again, remove the vote
+            if ((vote === 1 && hasUpvoted) || (vote === -1 && hasDownvoted)) {
+                return {
+                    ...q,
+                    votes: q.votes - vote, // Subtract the vote value
+                    upvotedBy: upvotedBy.filter(id => id !== userId),
+                    downvotedBy: downvotedBy.filter(id => id !== userId)
+                }
+            }
+
+            // If switching vote direction
+            if ((vote === 1 && hasDownvoted) || (vote === -1 && hasUpvoted)) {
+                return {
+                    ...q,
+                    votes: q.votes + (vote * 2), // Add double the vote value to switch
+                    upvotedBy: vote === 1 ? [...upvotedBy, userId] : upvotedBy.filter(id => id !== userId),
+                    downvotedBy: vote === -1 ? [...downvotedBy, userId] : downvotedBy.filter(id => id !== userId)
+                }
+            }
+
+            // New vote
+            return {
+                ...q,
+                votes: q.votes + vote,
+                upvotedBy: vote === 1 ? [...upvotedBy, userId] : upvotedBy,
+                downvotedBy: vote === -1 ? [...downvotedBy, userId] : downvotedBy
+            }
+        }
+        return q
+    })
+
+    saveQuestions(newQuestions)
+}
 
     const voteAnswer = (answerId: string, vote: 1 | -1) => {
         const newQuestions = questions.map((q) => ({

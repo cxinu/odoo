@@ -127,7 +127,10 @@ export default function AskQuestionPage() {
                                     {tag}
                                     <button
                                         type="button"
-                                        onClick={() => removeTag(tag)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            removeTag(tag);
+                                        }}
                                         className="ml-2 text-blue-600 hover:text-blue-800"
                                     >
                                         <X className="w-3 h-3" />
