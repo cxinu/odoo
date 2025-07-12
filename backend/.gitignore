@@ -1,8 +1,2 @@
-# gitignore for python
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-# C extensions
-*.so
-# Distribution / packaging
-.Python
+.env
+stackit
