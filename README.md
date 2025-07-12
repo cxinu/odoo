@@ -7,18 +7,16 @@
 ## Team Name
 `node_modules/uploader`
 
-## 📧 Email
+## Email
 - cxinu3099@gmail.com
 - Arpanpatra91111@gmail.com
 - vyomrohila@gmail.com
 - anirudhsaksena33@gmail.com
 
----
-
 ## Overview
 StackIt is a minimal, community-focused Q&A platform designed to support collaborative learning and structured knowledge sharing. It lets users easily ask questions, provide answers with rich formatting, vote on answers, and mark accepted solutions — all in a clean and friendly interface.
 
----
+
 
 ## Features
 - Ask questions with title, description (rich text), and tags
@@ -28,16 +26,17 @@ StackIt is a minimal, community-focused Q&A platform designed to support collabo
 - Basic notification system for answers, mentions, and comments
 - Simple admin moderation (optional)
 
----
 
 ## How to run
 
 ### Install dependencies
 
 ```bash
+git clone https://github.com/cxinu/odoo
 # Frontend
 cd frontend
 pnpm install
+pnpm run dev
 
 # Backend
 cd backend
