@@ -1,6 +1,7 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Search } from "lucide-react"
+import Fuse from "fuse.js"
 import { useData } from "../contexts/DataContext"
 import QuestionCard from "../components/QuestionCard"
 
@@ -12,17 +13,21 @@ export default function HomePage() {
     // Get all unique tags
     const allTags = Array.from(new Set(questions.flatMap((q) => q.tags))).sort()
 
-    // Filter questions based on search and tag
-    const filteredQuestions = questions.filter((question) => {
-        const matchesSearch =
-            searchTerm === "" ||
-            question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            question.description.toLowerCase().includes(searchTerm.toLowerCase())
+    // Fuse.js setup
+    const fuse = useMemo(() => {
+        return new Fuse(questions, {
+            keys: ["title", "description"],
+            threshold: 0.5, // lower is stricter, try adjusting between 0.2 - 0.6
+        })
+    }, [questions])
 
-        const matchesTag = selectedTag === "" || question.tags.includes(selectedTag)
+    // Fuzzy search results
+    const searchResults = searchTerm ? fuse.search(searchTerm).map((res) => res.item) : questions
 
-        return matchesSearch && matchesTag
-    })
+    // Filter based on tag
+    const filteredQuestions = searchResults.filter((question) =>
+        selectedTag === "" || question.tags.includes(selectedTag)
+    )
 
     return (
         <div className="max-w-4xl mx-auto">
@@ -85,7 +90,9 @@ export default function HomePage() {
                         </p>
                     </div>
                 ) : (
-                    filteredQuestions.map((question) => <QuestionCard key={question.id} question={question} />)
+                    filteredQuestions.map((question) => (
+                        <QuestionCard key={question.id} question={question} />
+                    ))
                 )}
             </div>
         </div>
