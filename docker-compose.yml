@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: stackit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stackit_user
+      POSTGRES_PASSWORD: supersecurepassword
+      POSTGRES_DB: stackit
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  postgres_data:
